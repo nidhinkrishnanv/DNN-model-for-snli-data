@@ -13,15 +13,16 @@ class ClassifySentence(nn.Module):
     def __init__(self, vocab_size, embedding_dim, num_classes):
         super(ClassifySentence, self).__init__()
         self.embedding_dim = embedding_dim
-        self.embeddings = nn.EmbeddingBag(vocab_size, embedding_dim)
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
         self.l1 = nn.Dropout(p=0.4)
         self.l2 = nn.Linear(embedding_dim, num_classes)
-        self.set_padding_embed()
+        # self.set_padding_embed()
 
-    def forward(self, inputs, offset):
-        out = self.embeddings(inputs, offset)
-        # print(out)
-        out = self.l1(out)
+    def forward(self, inputs):
+        print(inputs)
+        out = self.embeddings(inputs)
+        print('embeddings ', out.data.shape)
+        out = torch.sum(out, dim=1)
         out = F.log_softmax(self.l2(out))
         return out
 
