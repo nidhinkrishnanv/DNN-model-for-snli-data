@@ -10,18 +10,18 @@ import numpy as np
 
 class ClassifySentence(nn.Module):
 
-    def __init__(self, vocab_size, embedding_dim, num_classes):
+    def __init__(self, vocab_size, embedding_dim, num_classes, dropout):
         super(ClassifySentence, self).__init__()
         self.embedding_dim = embedding_dim
-        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
-        self.l1 = nn.Dropout(p=0.4)
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
+        self.l1 = nn.Dropout(p=dropout)
         self.l2 = nn.Linear(embedding_dim, num_classes)
         # self.set_padding_embed()
 
     def forward(self, inputs):
-        print(inputs)
+        # print(inputs)
         out = self.embeddings(inputs)
-        print('embeddings ', out.data.shape)
+        # print('embeddings ', out.data.shape)
         out = torch.sum(out, dim=1)
         out = F.log_softmax(self.l2(out))
         return out
@@ -58,5 +58,5 @@ class ClassifySentence(nn.Module):
         return wv_vocab
 
 
-CM = ClassifySentence(17634, 50,2)
+# CM = ClassifySentence(17634, 50,2)
 # CM.load_embed()

@@ -25,20 +25,24 @@ class SNLIDataset(Dataset):
         print ('preprossing ' + filename + '...')
         fpr = open('data/snli/snli_1.0/snli_1.0_'+filename+'.txt', 'r')
         fpr.readline()
+        count = 0
         for line in fpr:
+            # if count >= 4:
+            #     break
+            count += 1
             sentences = line.strip().split('\t')
             tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')']
             tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' ]
             data.append((tokens, labelDict[sentences[0]]))
         fpr.close()
-        print ('SNLI preprossing ' + filename + ' finished!')
-        print("Vocab size : ", len(self.word_to_idx))
+        # print ('SNLI preprossing ' + filename + ' finished!')
+        # print("Vocab size : ", len(self.word_to_idx))
         self.data = self.convert_data_to_word_to_idx(data)
         
 
     def convert_data_to_word_to_idx(self, data):
         data_to_word_to_idx = []
-        for sentence, label in data[:4]:
+        for sentence, label in data:
             sentence = [self.word_to_idx[w] for w in sentence]
             sentence_pad = np.zeros(self.max_len)
             sentence_pad[:len(sentence)] = sentence
@@ -71,20 +75,22 @@ class ToTensor(object):
                 'label': torch.from_numpy(label)}
 
 
-dataset = SNLIDataset('test', transform=transforms.Compose([ToTensor()]))
 
-for i in range(2):
-    sample = dataset[i]
-    print(sample)
+if __name__ == "__main__":
+    dataset = SNLIDataset('test', transform=transforms.Compose([ToTensor()]))
 
-dataloader = DataLoader(dataset, batch_size=4, num_workers=4)
+    for i in range(2):
+        sample = dataset[i]
+        print(sample)
 
-# print("dataloader size")
-# print(len(dataloader))
+    dataloader = DataLoader(dataset, batch_size=4, num_workers=4)
+
+    # print("dataloader size")
+    # print(len(dataloader))
 
 
-for i_batch, sample_batched in enumerate(dataloader):
-    print(i_batch, sample_batched['sentence'].size(),
-          sample_batched['label'].shape)
-    if (i_batch == 5):
-        break
+    for i_batch, sample_batched in enumerate(dataloader):
+        print(i_batch, sample_batched['sentence'].size(),
+              sample_batched['label'].shape)
+        if (i_batch == 5):
+            break
