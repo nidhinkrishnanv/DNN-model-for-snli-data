@@ -20,7 +20,7 @@ def vocab():
     max_len = 0
     for filename in filenames:
         print ('preprossing ' + filename + '...')
-        fpr = open('data/snli/snli_1.0/snli_1.0_'+filename+'.txt', 'r')
+        fpr = open('../data/snli/snli_1.0/snli_1.0_'+filename+'.txt', 'r')
         count = 0
         fpr.readline()
         for line in fpr:

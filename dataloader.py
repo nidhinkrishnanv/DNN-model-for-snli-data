@@ -7,6 +7,36 @@ from create_word_to_ix import get_word_to_ix, get_max_len
 
 import numpy as np
 
+
+def packed_collate_fn(data):
+
+    def merge(sequences):
+        lengths = [len(seq) for seq in sequences]
+        padded_seqs = torch.zeros(len(sequences), max(lengths)).long()
+        for i, seq in enumerate(sequences):
+            end = lengths[i]
+            padded_seqs[i, :end] = seq[:end]
+        return padded_seqs, lengths
+
+    # sort a list by sequence length (descending order) to use pack_padded_sequence
+    enumerated_data = [[idx, x[0], x[1], x[2]] for idx, x in enumerate(data)]
+    
+    #sort for sentence1 and create batch
+    enumerated_data.sort(key=lambda sent: len(sent[1]), reverse=True)
+    sent1_order, sent1_seqs, _, _ = zip(*enumerated_data)
+    sent1_seqs, sent1_lengths = merge(sent1_seqs)
+
+    #sort for sentence2 and create batch
+    enumerated_data.sort(key=lambda sent: len(sent[2]), reverse=True)
+    sent2_order, _, sent2_seqs, _ = zip(*enumerated_data)
+    sent2_seqs, sent2_lengths = merge(sent2_seqs)
+
+    score = [x[2].numpy() for x in data]
+    score = torch.Tensor(score)
+
+    return sent1_seqs, sent1_lengths, sent1_order, sent2_seqs, sent2_lengths, sent2_order, score
+
+
 class SNLIDataset(Dataset):
     def __init__(self, filename, transform=None):
         self.data = []
@@ -22,17 +52,16 @@ class SNLIDataset(Dataset):
         data = []
 
         print ('preprossing ' + filename + '...')
-        fpr = open('data/snli/snli_1.0/snli_1.0_'+filename+'.txt', 'r')
+        fpr = open('../data/snli/snli_1.0/snli_1.0_'+filename+'.txt', 'r')
         fpr.readline()
         count = 0
         for line in fpr:
             if count >= 100:
                 break
-            count += 1
             sentences = line.strip().split('\t')
-            tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')']
-            tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' ]
-            data.append((tokens, labelDict[sentences[0]]))
+            tokens = [[token for token in sentences[x].split(' ') if token != '(' and token != ')'] for x in [1, 2]]
+            data.append(([tokens[0], tokens[1]], labelDict[sentences[0]]))
+            count += 1
         fpr.close()
         # print ('SNLI preprossing ' + filename + ' finished!')
         # print("Vocab size : ", len(self.word_to_idx))
@@ -42,10 +71,12 @@ class SNLIDataset(Dataset):
     def convert_data_to_word_to_idx(self, data):
         data_to_word_to_idx = []
         for sentence, label in data:
-            sentence = [self.word_to_idx[w] for w in sentence]
-            sentence_pad = np.zeros(self.max_len)
-            sentence_pad[:len(sentence)] = sentence
-            data_to_word_to_idx.append((np.array(sentence_pad, dtype=np.int64), np.array([label], dtype=np.int64)))
+            for i in range(2):
+                sentence[i] = [self.word_to_idx[w] for w in sentence]
+            
+            data_to_word_to_idx.append((np.array(sentence[0], dtype=np.int64), 
+                np.array(sentence[1], dtype=np.int64),
+                np.array([label], dtype=np.int64)))
         return data_to_word_to_idx
 
     def len_of_sentence(self, input_tuple):
@@ -93,3 +124,4 @@ if __name__ == "__main__":
               sample_batched['label'].shape)
         if (i_batch == 5):
             break
+

@@ -111,6 +111,7 @@ def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=6):
 
 
 weight = 10**(-7*np.random.rand(15))
+# weight = [1]
 dropout = np.random.rand(15)
 # com = [(x,y) for x in weight for y in dropout]
 
@@ -128,7 +129,7 @@ def hyperparm_tune():
         model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, d)
         model.cuda()        
         parameters = filter(lambda p: p.requires_grad, model.parameters())
-        optimizer = optim.Adam(parameters, lr=0.001, weight_decay=w)
+        optimizer = optim.Adam(parameters, lr=0.001)
         model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 25)
         if acc > best_acc:
             best_acc = acc
@@ -139,16 +140,17 @@ def hyperparm_tune():
 
 # hyperparm_tune()
 
-model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, 0.3)
+model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, 0.2)
 model.cuda()
 
 temp = model.embeddings.weight[3].data.cpu().numpy()
-print(model.embeddings.weight[3][:10])
+# print(model.embeddings.weight[3][:10])
 parameters = filter(lambda p: p.requires_grad, model.parameters())
-optimizer = optim.Adam(parameters, lr=0.001, weight_decay=1.287051167874816e-06)
-model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 3)
+# optimizer = optim.Adam(parameters, lr=0.001, weight_decay=1.287051167874816e-06)
+optimizer = optim.Adam(parameters, lr=0.001)
+model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 30)
 
-print(model.embeddings.weight[3][:10])
-print(np.array_equal(temp, model.embeddings.weight[3].data.cpu().numpy()))
+# print(model.embeddings.weight[3][:10])
+# print(np.array_equal(temp, model.embeddings.weight[3].data.cpu().numpy()))
 
 # print(model.embeddings.weight[3])
