@@ -3,11 +3,13 @@ import time
 import glob
 import sys
 import pickle
+import re
 
 import torch
 import torch.optim as O
 import torch.nn as nn
 import json
+from nltk.tokenize import word_tokenize
 
 
 def vocab():
@@ -22,14 +24,23 @@ def vocab():
         count = 0
         fpr.readline()
         for line in fpr:
+            # if count > 1:
+            #     break
             sentences = line.strip().split('\t')
             sentences = line.strip().split('\t')
+            # print(sentences[1])
+            # print(sentences[2])
             tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')']
             tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' ]
+            # tokens = [token for token in re.split('[- )(]', sentences[1]) if token not in [' ', '', '.']]
+            # tokens += [token for token in re.split('[- )(] ',sentences[2]) if token not in [' ', '', '.'] ]
+            # print(tokens)
             max_len = max([max_len, len(tokens)])
 
-            vocab.update(tokens)        
+            vocab.update(tokens)
+            count += 1   
         fpr.close()
+    # print(vocab)
     word_to_idx = {word:i for i, word in enumerate(vocab, 1)}
     word_to_idx["[<pad>]"] = 0
     print("Vocab size : ", len(word_to_idx))

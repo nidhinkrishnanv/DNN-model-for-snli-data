@@ -1,3 +1,5 @@
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
@@ -21,11 +23,13 @@ from unigram_dataloader import SNLIDataset, ToTensor
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
-EMBEDDING_DIM = 100
+
+
+EMBEDDING_DIM = 300
 
 dataset = {x : SNLIDataset(x, transform=transforms.Compose([ToTensor()]))
             for x in ['train', 'test', 'dev']}
-dset_loader = {x : DataLoader(dataset[x], batch_size=512, num_workers=4)
+dset_loader = {x : DataLoader(dataset[x], batch_size=512, shuffle=True, num_workers=4)
                 for x in ['train', 'test', 'dev']}
 dset_sizes = {x : len(dataset[x]) for x in ['train', 'test', 'dev'] }
 print(dset_sizes)
@@ -93,7 +97,7 @@ def train_model(model, loss_function, optimizer, lr_scheduler=None, num_epochs=5
     print('Best val Acc: {:4f}'.format(best_acc))
     return best_model, best_acc
 
-def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=7):
+def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=6):
     """Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs."""
     lr = init_lr * (0.1**(epoch // lr_decay_epoch))
 
@@ -114,21 +118,37 @@ dropout = np.random.rand(15)
 loss_function = nn.NLLLoss()
 
 
-best_acc = 0
-best_w = 0
-best_d = 0
-for i, (w, d) in enumerate(zip(weight, dropout)):
-    print()
-    print('{} Weight: {} Dropout: {}'.format(i, w, d))
-    model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, d)
-    model.cuda()
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=w)
-    model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 25)
-    if acc > best_acc:
-        best_acc = acc
-        best_w = w
-        best_d = d
-print('best_w: {:.4f} best_d: {:.4f} best_acc: {:.4f}'.format(
-    best_w, best_d, best_acc))
+def hyperparm_tune():
+    best_acc = 0
+    best_w = 0
+    best_d = 0
+    for i, (w, d) in enumerate(zip(weight, dropout)):
+        print()
+        print('{} Weight: {} Dropout: {}'.format(i, w, d))
+        model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, d)
+        model.cuda()        
+        parameters = filter(lambda p: p.requires_grad, model.parameters())
+        optimizer = optim.Adam(parameters, lr=0.001, weight_decay=w)
+        model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 25)
+        if acc > best_acc:
+            best_acc = acc
+            best_w = w
+            best_d = d
+    print('best_w: {:.4f} best_d: {:.4f} best_acc: {:.4f}'.format(
+        best_w, best_d, best_acc))
 
+# hyperparm_tune()
 
+model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, 0.3)
+model.cuda()
+
+temp = model.embeddings.weight[3].data.cpu().numpy()
+print(model.embeddings.weight[3][:10])
+parameters = filter(lambda p: p.requires_grad, model.parameters())
+optimizer = optim.Adam(parameters, lr=0.001, weight_decay=1.287051167874816e-06)
+model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 3)
+
+print(model.embeddings.weight[3][:10])
+print(np.array_equal(temp, model.embeddings.weight[3].data.cpu().numpy()))
+
+# print(model.embeddings.weight[3])

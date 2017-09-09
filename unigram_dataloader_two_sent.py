@@ -26,13 +26,12 @@ class SNLIDataset(Dataset):
         fpr.readline()
         count = 0
         for line in fpr:
-            if count >= 100:
+            if count >= 10000:
                 break
             count += 1
             sentences = line.strip().split('\t')
-            tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')']
-            tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' ]
-            data.append((tokens, labelDict[sentences[0]]))
+            sent = [[token for token in sentences[x].split(' ').split('-') if token != '(' and token != ')'] for x in [1, 2]]            
+            data.append((sent, labelDict[sentences[0]]))
         fpr.close()
         # print ('SNLI preprossing ' + filename + ' finished!')
         # print("Vocab size : ", len(self.word_to_idx))
