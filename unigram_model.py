@@ -7,30 +7,33 @@ import torch.optim as optim
 import torchwordemb
 import gensim
 import numpy as np
-from create_word_to_ix import get_word_to_ix, get_max_len
+from preprocess_data import get_word_to_ix, get_max_len
 
 class ClassifySentence(nn.Module):
 
-    def __init__(self, vocab_size, embedding_dim, num_classes, dropout):
+    def __init__(self, vocab_size, embedding_dim, num_classes, dropout, layer_width=700):
         super(ClassifySentence, self).__init__()
         self.embedding_dim = embedding_dim
+        self.layer_width = layer_width
         self.embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
-        self.l1 = nn.Linear(embedding_dim, 700)
+        self.l1 = nn.Linear(2*embedding_dim, self.layer_width)
         self.d1 = nn.Dropout(p=dropout)
-        self.l2 = nn.Linear(700, 700)
+        self.l2 = nn.Linear(self.layer_width, self.layer_width)
         self.d2 = nn.Dropout(p=dropout)
-        self.l3 = nn.Linear(700, num_classes)
+        self.l3 = nn.Linear(self.layer_width, num_classes)
         # self.set_padding_embed()
         # print(self.embeddings.weight[3])
         self.load_embed()
 
         # print(self.embeddings.weight[3])
 
-    def forward(self, inputs):
+    def forward(self, sentences, sent_lengths):
         # print(inputs)
-        out = self.embeddings(inputs)
-        # print('embeddings ', out.data.shape)
-        out = torch.sum(out, dim=1)
+        out = [self.embeddings(sentences[i]) for i in range(2)]
+        out = [torch.sum(out[i], dim=1)/sent_lengths[i].view(-1, 1) for i in range(2)]
+        # print('embed', out[0].data.shape)
+        out = torch.cat([out[0], out[1]],dim=1)
+        # print('out s', out.data.shape)
         out = F.relu(self.d1(self.l1(out)))
         out = F.relu(self.d2(self.l2(out)))
         out = F.log_softmax(self.l3(out))
@@ -62,7 +65,7 @@ class ClassifySentence(nn.Module):
         # print(new_weights_t[word_to_ix['apple']])
 
         self.embeddings.weight = nn.Parameter(new_weights_t)
-        
+
         self.embeddings.weight.requires_grad = False
 
 

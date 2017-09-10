@@ -24,7 +24,7 @@ class TrainWord2Vec():
             fpr.close()
             # print(data)
 
-        model = gensim.models.Word2Vec(data, size=300, window=5, min_count=1, workers=4)
+        model = gensim.models.Word2Vec(data, size=300, window=5, min_count=5, workers=4)
         # model.train(data)
         model.save('model/word2vec_snli.model')
             # self.data = self.convert_data_to_word_to_idx(data)
@@ -49,7 +49,7 @@ class TrainWord2Vec():
         return data_to_word_to_idx
 
 if __name__ == "__main__":
-   # tW2V = TrainWord2Vec()
+   tW2V = TrainWord2Vec()
    # model = gensim.models.Word2Vec.load('model/word2vec_snli.model')
    # print(type(model))
    # print(model.most_similar(positive=['woman', 'king'], negative=['man'], topn=1))
