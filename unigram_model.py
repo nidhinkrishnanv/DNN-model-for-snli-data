@@ -19,8 +19,9 @@ class ClassifySentence(nn.Module):
         self.l1 = nn.Linear(2*embedding_dim, self.layer_width)
         self.d1 = nn.Dropout(p=dropout)
         self.l2 = nn.Linear(self.layer_width, self.layer_width)
-        self.d2 = nn.Dropout(p=dropout)
-        self.l3 = nn.Linear(self.layer_width, num_classes)
+        self.d3 = nn.Dropout(p=dropout)
+
+        self.final = nn.Linear(self.layer_width, num_classes)
         # self.set_padding_embed()
         # print(self.embeddings.weight[3])
         self.load_embed()
@@ -36,7 +37,7 @@ class ClassifySentence(nn.Module):
         # print('out s', out.data.shape)
         out = F.relu(self.d1(self.l1(out)))
         out = F.relu(self.d2(self.l2(out)))
-        out = F.log_softmax(self.l3(out))
+        out = F.log_softmax(self.final(out))
         return out
 
     def set_padding_embed(self):

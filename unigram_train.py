@@ -24,7 +24,7 @@ from torchvision import transforms, utils
 
 from unigram_test import test_model
 
-
+EPOCHS = 30
 
 EMBEDDING_DIM = 300
 
@@ -124,7 +124,7 @@ def hyperparm_tune():
         model.cuda()        
         parameters = filter(lambda p: p.requires_grad, model.parameters())
         optimizer = optim.Adam(parameters, lr=0.001)
-        model_ft, acc = train_model(model, loss_function, optimizer, num_epochs=30)
+        model_ft, acc = train_model(model, loss_function, optimizer, num_epochs=EPOCHS)
 
         # model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 25)
         if acc > best_acc:
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     # print(layer_width)
     # hyperparm_tune()
 
-    model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, 0.2)
+    model = ClassifySentence(dataset['train'].len_vocab(), EMBEDDING_DIM, 3, 0.2, 700)
     model.cuda()
 
     temp = model.embeddings.weight[3].data.cpu().numpy()
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # optimizer = optim.Adam(parameters, lr=0.001, weight_decay=1.287051167874816e-06)
     optimizer = optim.Adam(parameters, lr=0.001)
     # model_ft, acc = train_model(model, loss_function, optimizer, exp_lr_scheduler, 30)
-    model_ft, acc = train_model(model, loss_function, optimizer, num_epochs=20)
+    model_ft, acc = train_model(model, loss_function, optimizer, num_epochs=EPOCHS)
 
     #test model
     print("\nTesting")

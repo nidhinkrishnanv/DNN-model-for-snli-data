@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-from create_word_to_ix import get_word_to_ix, get_max_len
+from preprocess_data import get_word_to_ix, get_max_len
 from preprocess_data import load_data
 
 from nltk.corpus import stopwords

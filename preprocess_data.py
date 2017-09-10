@@ -14,6 +14,8 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
 stopWords = set(stopwords.words('english'))
+myStopWords = set(['(', ')','', ' '])
+stopWords.update(myStopWords)
 
 def vocab():
     filenames = ['dev', 'test', 'train']
@@ -31,8 +33,11 @@ def vocab():
             #     break
             sentences = line.strip().split('\t')
             sentences = line.strip().split('\t')
-            tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')' and token not in stopWords]
-            tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' and token not in stopWords]
+            # tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')' and token not in stopWords]
+            # tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' and token not in stopWords]
+
+            tokens = [token for token in re.split('\W+', sentences[1].lower()) if token not in stopWords]
+            tokens += [token for token in re.split('\W+', sentences[2].lower()) if token not in stopWords]
             max_len = max([max_len, len(tokens)])
             vocab.update(tokens)
             count += 1   
@@ -76,8 +81,10 @@ def save_data(is_train_gensim=False):
             # if count >= 1000:
             #     break
             sentences = line.strip().split('\t')
-            tokens = [[token for token in sentences[x].split(' ') if token != '(' and token != ')' and token not in stopWords] for x in [1, 2]]
+            # tokens = [[token for token in sentences[x].split(' ') if token != '(' and token != ')' and token not in stopWords] for x in [1, 2]]
             
+            tokens = [[token for token in re.split('\W+', sentences[i].lower()) if token != '(' and token != ')' and token not in stopWords] for i in [1, 2]]
+
             #For training gensim model
             if is_train_gensim:
                 gensim_train_data.extend([tokens[0], tokens[1]])
@@ -87,16 +94,12 @@ def save_data(is_train_gensim=False):
             #check for empty strings
             if len(tokens[0]) != 0 and len(tokens[1]) != 0:
                 data.append(([tokens[0], tokens[1]], labelDict[sentences[0]]))
-                # print(count)
-                # print(tokens[0])
-                # print(tokens[1])
-                # print(sentences[1])
-                # print(sentences[2])
             count += 1
         fpr.close()
         # print(data[:4])
         print ('SNLI preprossing ' + filename + ' finished!\n')
         print("Saving Data Vocab size : ", len(vocab))
+        # print(data[:2])
         data = convert_data_to_word_to_idx(data)
         with open('data/' + filename + '.pkl', 'wb') as f:
             pickle.dump(data, f)
@@ -120,13 +123,9 @@ def load_data(filename):
         return pickle.load(f)
 
 if __name__ == "__main__":
-    print(stopWords)
+    # print(stopWords)
+    
     #save word_to_idx
-    # vocab()
-    save_data()
-    #gensim
-    # w2v = TrainWord2Vec()
-    # w2v.train()
-    # model = gensim.models.Word2Vec.load('model/word2vec_snli.model')
-    # print(type(model))
-    # print(model.most_similar(positive=['woman', 'king'], negative=['man'], topn=1))
+    vocab()
+
+    save_data(True)
