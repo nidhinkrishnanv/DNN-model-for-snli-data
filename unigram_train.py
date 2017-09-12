@@ -25,7 +25,6 @@ from torchvision import transforms, utils
 from unigram_test import test_model
 
 EPOCHS = 30
-
 EMBEDDING_DIM = 300
 
 dataset = {x : SNLIDataset(x, transform=transforms.Compose([ToTensor()]))
@@ -63,7 +62,6 @@ def train_model(model, loss_function, optimizer, lr_scheduler=None, num_epochs=5
                 sentences = [Variable(data['sent'][i].cuda()) for i in range(2)]
                 sent_lengths = [Variable(data['sent_length'][i].float().cuda()) for i in range(2)]
                 labels = Variable(data['labels'].cuda())
-                # print(model.embeddings.weight.data[0])
 
                 optimizer.zero_grad()
 
@@ -75,9 +73,6 @@ def train_model(model, loss_function, optimizer, lr_scheduler=None, num_epochs=5
                     loss.backward()
                     optimizer.step()
 
-                # print(preds)
-                # print(labels.data)
-                # print(preds == labels.data)
                 running_loss += loss.data[0]
                 running_corrects += torch.sum(preds == labels.data.view(-1))
 
