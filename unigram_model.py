@@ -19,22 +19,14 @@ class ClassifySentence(nn.Module):
         self.l1 = nn.Linear(2*embedding_dim, self.layer_width)
         self.d1 = nn.Dropout(p=dropout)
         self.l2 = nn.Linear(self.layer_width, self.layer_width)
-        self.d3 = nn.Dropout(p=dropout)
-
+        self.d2 = nn.Dropout(p=dropout)
         self.final = nn.Linear(self.layer_width, num_classes)
-        # self.set_padding_embed()
-        # print(self.embeddings.weight[3])
         self.load_embed()
 
-        # print(self.embeddings.weight[3])
-
     def forward(self, sentences, sent_lengths):
-        # print(inputs)
         out = [self.embeddings(sentences[i]) for i in range(2)]
         out = [torch.sum(out[i], dim=1)/sent_lengths[i].view(-1, 1) for i in range(2)]
-        # print('embed', out[0].data.shape)
         out = torch.cat([out[0], out[1]],dim=1)
-        # print('out s', out.data.shape)
         out = F.relu(self.d1(self.l1(out)))
         out = F.relu(self.d2(self.l2(out)))
         out = F.log_softmax(self.final(out))

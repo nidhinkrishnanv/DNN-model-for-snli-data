@@ -17,9 +17,14 @@ stopWords = set(stopwords.words('english'))
 myStopWords = set(['(', ')','', ' '])
 stopWords.update(myStopWords)
 
+if not os.path.isdir('data'):
+    os.mkdir('data')
+
+if not os.path.isdir('model'):
+    os.mkdir('model')
+
 def vocab():
     filenames = ['dev', 'test', 'train']
-    # filenames = ['test', 'dev']
     labelDict = {'neutral':0, 'entailment':1, 'contradiction':2, '-':0}
     vocab = set()
     max_len = 0
@@ -32,9 +37,6 @@ def vocab():
             # if count > 1:
             #     break
             sentences = line.strip().split('\t')
-            sentences = line.strip().split('\t')
-            # tokens = [token for token in sentences[1].split(' ') if token != '(' and token != ')' and token not in stopWords]
-            # tokens += [token for token in sentences[2].split(' ') if token != '(' and token != ')' and token not in stopWords]
 
             tokens = [token for token in re.split('\W+', sentences[1].lower()) if token not in stopWords]
             tokens += [token for token in re.split('\W+', sentences[2].lower()) if token not in stopWords]
@@ -83,7 +85,7 @@ def save_data(is_train_gensim=False):
             sentences = line.strip().split('\t')
             # tokens = [[token for token in sentences[x].split(' ') if token != '(' and token != ')' and token not in stopWords] for x in [1, 2]]
             
-            tokens = [[token for token in re.split('\W+', sentences[i].lower()) if token != '(' and token != ')' and token not in stopWords] for i in [1, 2]]
+            tokens = [[token for token in re.split('\W+', sentences[i].lower()) if token not in stopWords] for i in [1, 2]]
 
             #For training gensim model
             if is_train_gensim:
